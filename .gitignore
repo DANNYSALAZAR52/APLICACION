@@ -1,0 +1,29 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node (node_modules es una unión hacia %LOCALAPPDATA%; sin barra final para ignorarla también)
+node_modules
+dist/
+
+# Secretos y entorno local (nunca en Git)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Artefactos de ML por tenant (datos entrenados, no se versionan)
+APP/Backend/artifacts/
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store

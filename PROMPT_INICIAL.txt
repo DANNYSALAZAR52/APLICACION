@@ -1,0 +1,39 @@
+PROMPT INICIAL PARA CLAUDE EN VS CODE
+
+Actúa como arquitecto de software senior y desarrollador full-stack con experiencia en arquitectura hexagonal, principios SOLID, seguridad de aplicaciones, logística, optimización y machine learning.
+
+OBJETIVO
+Construir de forma incremental una aplicación para una empresa de transporte con dos módulos: (1) planeación y dimensionamiento de capacidad de flota, hoy y a cinco años; (2) planificación y ruteo dinámico de distribución urbana, con simulación GPS y recálculo ante eventos. La solución debe servir como demo para un cliente, pero la estructura y el dominio deben ser una base mantenible para evolucionar a producto real.
+
+ANTES DE ACTUAR, LEE ESTOS ARCHIVOS
+1. `CLAUDE.md`: instrucciones permanentes de trabajo.
+2. `DOCS.MD`: especificación funcional y técnica maestra, algoritmos, arquitectura, multi-tenancy, ML, seguridad y criterios de aceptación.
+3. `docs/ESPECIFICACIONES_BACKEND.md`: estándares y reglas del backend.
+4. `docs/ESPECIFICACIONES_FRONTEND.md`: estándares y reglas del frontend.
+
+Si un archivo no existe o no puedes leerlo, informa cuál es y no inventes su contenido. Inspecciona el workspace actual sin modificarlo: conserva código existente correcto y localiza la planilla de referencia original, si está disponible. Informa rutas exactas y si pudiste leer los datos.
+
+REGLAS DE EJECUCIÓN
+- No escribas código, instales paquetes, ejecutes migraciones, borres ni sobrescribas archivos hasta presentar el plan y recibir mi aprobación explícita.
+- En esta primera respuesta realiza únicamente diagnóstico y planificación.
+- Verifica qué herramientas están realmente disponibles (por ejemplo Python, Node, Docker y comandos de pruebas); no supongas que están instaladas.
+- Identifica contradicciones y decisiones indispensables que afecten reglas de negocio, arquitectura, seguridad, datos o alcance. No preguntes por detalles menores: selecciona una opción sencilla y mantenible y registra la justificación en `docs/DECISIONES.md` cuando el trabajo esté autorizado.
+- Respeta la estructura: `APP/Backend/`, `APP/Frontend/`, `infra/`, `docs/`, `DOCS.MD` y `CLAUDE.md`. No mezcles backend y frontend.
+- Usa nombres genéricos para tenants, por ejemplo “Empresa Demo A” y “Empresa Demo B”. No uses el nombre de una empresa específica como nombre del producto, del paquete Python ni como constante del código.
+- Todo dato, GPS o proveedor simulado debe estar aislado detrás de un puerto/adaptador, marcado `DEMO-ONLY` y documentado en `docs/DEUDA_DEMO.md`. La interfaz debe mostrar “DATOS DE DEMOSTRACIÓN”.
+- Aplica arquitectura hexagonal estricta y SOLID verificable mediante pruebas de contrato y de arquitectura.
+- El demo tendrá una base central de control y una base de datos por tenant: en Docker Compose usar `pg-control`, `pg-tenant-a` y `pg-tenant-b`, además de Redis y la aplicación. No afirmar que contenedores locales equivalen a servidores físicos separados.
+- No uses servicios de pago ni credenciales reales para la demo básica.
+- No inventes pruebas, resultados de auditoría, cobertura, métricas ni éxito de comandos. Informa resultados reales y las cosas que no pudiste ejecutar.
+- No fuerces los algoritmos para que coincidan con cifras esperadas. Sin la planilla original, usa datos sintéticos deterministas y casos calculados manualmente; declara que los resultados de referencia no se reprodujeron contra esa planilla.
+- Mantén una entrega funcional por fase; corre pruebas pertinentes después de cada incremento y verificaciones integrales en hitos y al final.
+
+ENTREGA DE ESTA PRIMERA RESPUESTA
+1. Confirma si puedes leer `CLAUDE.md`, `DOCS.MD` y los dos documentos técnicos.
+2. Resume el estado y la estructura actual del workspace sin modificarlo.
+3. Informa si hallaste la planilla original y qué herramientas pudiste comprobar.
+4. Señala contradicciones, riesgos y decisiones realmente bloqueantes.
+5. Presenta un plan corto por fases con entregables, dependencias, criterios de aceptación y riesgos, siguiendo el orden sugerido en `DOCS.MD`.
+6. Indica qué fase recomiendas abordar primero y por qué.
+
+Después detente y espera mi aprobación. No programes todavía.

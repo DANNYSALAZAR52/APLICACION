@@ -1,0 +1,148 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fleetplanner"
+version = "0.1.0"
+description = "Planeación de capacidad de flota y ruteo dinámico (demo)."
+requires-python = ">=3.12"
+dependencies = [
+    "ortools>=9.15",
+    "numpy>=2.0",
+    "pandas>=3.0",
+    "fastapi>=0.143",
+    "uvicorn>=0.54",
+    "argon2-cffi>=25.1",
+    "pyjwt>=2.15",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+    "pytest-cov>=7.0",
+    "httpx>=0.28",
+    "ruff>=0.17",
+    "mypy>=2.4",
+    "import-linter>=2.15",
+    "bandit>=1.9",
+    "pip-audit>=2.10",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fleetplanner"]
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "integration: requiere servicios externos (PostgreSQL/Redis); no se ejecuta en el demo sin Docker.",
+]
+
+[tool.coverage.run]
+source = ["src/fleetplanner/domain"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+
+# ------------------------------------------------------------------ ruff
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "SIM", "C4"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["fleetplanner", "builders", "import_checker"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+# ------------------------------------------------------------------ mypy
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+packages = ["fleetplanner"]
+
+[[tool.mypy.overrides]]
+module = ["fleetplanner.domain.*", "fleetplanner.application.*"]
+strict = true
+
+# OR-Tools no publica stubs ni py.typed; solo lo importa el adaptador del solver.
+[[tool.mypy.overrides]]
+module = ["ortools.*"]
+ignore_missing_imports = true
+
+# --------------------------------------------------------- import-linter
+[tool.importlinter]
+root_package = "fleetplanner"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Capas hexagonales"
+type = "layers"
+layers = [
+    "fleetplanner.bootstrap",
+    "fleetplanner.adapters",
+    "fleetplanner.application",
+    "fleetplanner.domain",
+]
+
+[[tool.importlinter.contracts]]
+name = "El dominio no conoce infraestructura"
+type = "forbidden"
+source_modules = ["fleetplanner.domain"]
+forbidden_modules = [
+    "fastapi",
+    "pydantic",
+    "sqlalchemy",
+    "redis",
+    "sklearn",
+    "pulp",
+    "highspy",
+    "ortools",
+    "numpy",
+    "pandas",
+    "fleetplanner.application",
+    "fleetplanner.adapters",
+    "fleetplanner.bootstrap",
+]
+
+[[tool.importlinter.contracts]]
+name = "La aplicación no conoce infraestructura ni adaptadores"
+type = "forbidden"
+source_modules = ["fleetplanner.application"]
+forbidden_modules = [
+    "fastapi",
+    "sqlalchemy",
+    "redis",
+    "sklearn",
+    "pulp",
+    "highspy",
+    "ortools",
+    "fleetplanner.adapters",
+    "fleetplanner.bootstrap",
+]
+
+[[tool.importlinter.contracts]]
+name = "Los adaptadores salientes no se importan entre sí"
+type = "independence"
+modules = [
+    "fleetplanner.adapters.outbound.persistence_memory",
+    "fleetplanner.adapters.outbound.solver",
+    "fleetplanner.adapters.outbound.demo_data",
+    "fleetplanner.adapters.outbound.clock",
+    "fleetplanner.adapters.outbound.security",
+]
+
+[[tool.importlinter.contracts]]
+name = "Los adaptadores de entrada no importan adaptadores de salida"
+type = "forbidden"
+source_modules = ["fleetplanner.adapters.inbound"]
+forbidden_modules = ["fleetplanner.adapters.outbound"]
+

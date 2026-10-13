@@ -1,0 +1,57 @@
+# Docker Compose de la demo.
+#
+# ESTADO: las bases de datos están COMENTADAS A PROPÓSITO (decisión del usuario, D-001 en
+# docs/DECISIONES.md). La demo actual usa repositorios en memoria (DEMO-ONLY) y no necesita
+# Docker. Este archivo no ha sido ejecutado ni validado: Docker no está instalado en el entorno
+# de desarrollo actual (ver docs/REGISTRO_DEMO.md).
+#
+# Para activar la persistencia real: descomentar los servicios, completar las variables de
+# entorno desde un .env local (nunca en Git; ver .env.example), implementar los adaptadores
+# SQLAlchemy descritos en APP/Backend/src/fleetplanner/adapters/outbound/persistence_sql/ y
+# declarar las migraciones Alembic `control_plane` y `tenant`.
+#
+# Tres contenedores PostgreSQL demuestran separación lógica y de instancia en local; NO equivalen
+# a tres servidores físicos distintos.
+
+services: {}
+
+# services:
+#   pg-control:                      # Registro central de tenants
+#     image: postgis/postgis:16-3.4
+#     environment:
+#       POSTGRES_DB: control_plane
+#       POSTGRES_USER: ${PG_CONTROL_USER}
+#       POSTGRES_PASSWORD: ${PG_CONTROL_PASSWORD}
+#     volumes: [pg-control-data:/var/lib/postgresql/data]
+#     networks: [backend-net]        # sin puertos publicados al exterior
+#
+#   pg-tenant-a:                     # Empresa Demo A
+#     image: postgis/postgis:16-3.4
+#     environment:
+#       POSTGRES_DB: tenant_a
+#       POSTGRES_USER: ${PG_TENANT_A_USER}
+#       POSTGRES_PASSWORD: ${PG_TENANT_A_PASSWORD}
+#     volumes: [pg-tenant-a-data:/var/lib/postgresql/data]
+#     networks: [backend-net]
+#
+#   pg-tenant-b:                     # Empresa Demo B
+#     image: postgis/postgis:16-3.4
+#     environment:
+#       POSTGRES_DB: tenant_b
+#       POSTGRES_USER: ${PG_TENANT_B_USER}
+#       POSTGRES_PASSWORD: ${PG_TENANT_B_PASSWORD}
+#     volumes: [pg-tenant-b-data:/var/lib/postgresql/data]
+#     networks: [backend-net]
+#
+#   redis:                           # Caché de matrices de tiempos (TTL 15 min)
+#     image: redis:7-alpine
+#     networks: [backend-net]
+#
+# networks:
+#   backend-net:
+#     internal: true                 # las bases no se exponen fuera de la red de la aplicación
+#
+# volumes:
+#   pg-control-data:
+#   pg-tenant-a-data:
+#   pg-tenant-b-data:
