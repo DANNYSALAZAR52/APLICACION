@@ -242,6 +242,14 @@ la Empresa B devuelve cifras distintas a la A.
   literal): el único hallazgo es una contraseña de ejemplo en una prueba del frontend
   (`Clave-Inicial-9x`), sin valor real. No existe `.env`. Esto **no** equivale a un escaneo de
   secretos con herramienta especializada (sigue pendiente).
+- **Commit local:** `f2f3c11` (153 archivos). Remoto configurado:
+  `https://github.com/DANNY5SALAZAR/fleetplanner-demo.git`.
+- **Push: NO completado desde la herramienta.** Intentos: (1) sin credenciales, el entorno desactiva
+  los avisos (`GIT_TERMINAL_PROMPT=0`, `GCM_INTERACTIVE=never`); (2) con el Git Credential Manager
+  y la interactividad activada solo para ese comando, el diálogo de autorización de GitHub se
+  canceló (`User cancelled dialog`) por no haber sesión interactiva disponible. No se usó ni se
+  pidió ningún token. **Pendiente:** que el usuario ejecute el push en su propia terminal (ver
+  `docs/PENDIENTES.md`, sección "Cómo retomar").
 - **Aviso:** el repositorio local queda dentro de OneDrive; OneDrive sincroniza la carpeta `.git`,
   lo que a veces provoca conflictos. Si aparecen problemas, mover el repositorio fuera de OneDrive.
 

@@ -113,6 +113,16 @@ las vistas nuevas, revisión visual y responsive de todas las pantallas.
 
 ## 7. Cómo retomar
 
+0. **Subir a GitHub (pendiente):** el commit local existe pero el `push` no se completó (requiere
+   que el usuario autorice en el navegador). En una terminal PowerShell propia, desde la carpeta
+   `DEMO`, con el repositorio privado `DANNY5SALAZAR/fleetplanner-demo` ya creado y vacío:
+
+   ```powershell
+   $git = "$env:LOCALAPPDATA\fleetplanner-tools\git"
+   $env:Path = "$git\cmd;$git\mingw64\bin;$git\ucrt64\bin;$env:Path"
+   git push -u origin main      # se abre el navegador para autorizar con su cuenta de GitHub
+   ```
+   Si ya tiene Git instalado en el sistema, basta `git push -u origin main`.
 1. Leer `README.md` (puesta en marcha) y este archivo.
 2. Ejecutar `scripts\setup-frontend.ps1` y `scripts\start-demo.ps1`; revisar la interfaz en el navegador.
 3. Aprobar la fase 3 (y la dependencia `leaflet`) o indicar ajustes a lo ya hecho.
