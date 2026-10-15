@@ -13,7 +13,6 @@
 **/.coverage
 **/htmlcov
 APP/Backend/tests
-APP/Frontend/src/test
 docs
 scripts
 infra
