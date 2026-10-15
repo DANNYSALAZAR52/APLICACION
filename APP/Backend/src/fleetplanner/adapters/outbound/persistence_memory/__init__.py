@@ -15,12 +15,24 @@ from fleetplanner.adapters.outbound.persistence_memory.control_plane import (
     InMemoryTenantWorkspaceProvider,
     InMemoryUserRepository,
 )
+from fleetplanner.adapters.outbound.persistence_memory.master_data import (
+    InMemoryMasterDataStore,
+)
+from fleetplanner.adapters.outbound.persistence_memory.ml_registry import (
+    InMemoryModelRegistry,
+)
+from fleetplanner.adapters.outbound.persistence_memory.routing_state import (
+    InMemoryRoutingRepository,
+)
 
 __all__ = [
     "InMemoryAuditLog",
     "InMemoryCapacityResultRepository",
+    "InMemoryMasterDataStore",
+    "InMemoryModelRegistry",
     "InMemoryRateLimiter",
     "InMemoryRefreshTokenStore",
+    "InMemoryRoutingRepository",
     "InMemoryTenantRegistry",
     "InMemoryTenantWorkspaceProvider",
     "InMemoryUserRepository",

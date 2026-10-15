@@ -7,6 +7,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from fleetplanner.adapters.inbound.http.schemas_patterns import MlForecastOut, ml_forecast_out
 from fleetplanner.application.dto.capacity import CapacityDashboard
 from fleetplanner.application.dto.security import AuditEvent, TenantSummary
 from fleetplanner.domain.tenancy.access_policy import AccessPolicy
@@ -231,6 +232,7 @@ class DashboardResponse(BaseModel):
     findings: list[str]
     warnings: list[str]
     ml_forecast_available: bool
+    ml_forecast: list[MlForecastOut]
 
 
 def _finite(value: float | None) -> float | None:
@@ -373,4 +375,5 @@ def dashboard_response(dashboard: CapacityDashboard) -> DashboardResponse:
         findings=dashboard.findings,
         warnings=dashboard.warnings,
         ml_forecast_available=dashboard.ml_forecast_available,
+        ml_forecast=[ml_forecast_out(item) for item in dashboard.ml_forecast],
     )

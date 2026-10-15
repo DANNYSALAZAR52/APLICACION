@@ -16,6 +16,7 @@ class Permission(StrEnum):
     DRIVER_ROUTE = "driver:route"
     MASTER_DATA_MANAGE = "master_data:manage"
     PATTERNS_READ = "patterns:read"
+    PATTERNS_TRAIN = "patterns:train"
     INDICATORS_READ = "indicators:read"
     AUDIT_READ = "audit:read"
     TENANTS_MANAGE = "tenants:manage"
@@ -27,6 +28,7 @@ _GRANTS: dict[Role, frozenset[Permission]] = {
             Permission.CAPACITY_READ,
             Permission.CAPACITY_RECALCULATE,
             Permission.PATTERNS_READ,
+            Permission.PATTERNS_TRAIN,
             Permission.INDICATORS_READ,
         }
     ),

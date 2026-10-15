@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from fleetplanner.application.use_cases.build_capacity_dashboard import BuildCapacityDashboard
+from fleetplanner.application.use_cases.masters.service import MasterDataService
+from fleetplanner.application.use_cases.ml.service import MlService
+from fleetplanner.application.use_cases.routing.workspace import RoutingWorkspace
 from fleetplanner.domain.tenancy.models import TenantId
 
 
@@ -17,3 +20,6 @@ class TenantWorkspace:
 
     tenant_id: TenantId
     capacity_dashboard: BuildCapacityDashboard
+    routing: RoutingWorkspace
+    masters: MasterDataService
+    ml: MlService | None = None

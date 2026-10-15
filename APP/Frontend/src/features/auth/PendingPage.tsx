@@ -9,9 +9,8 @@ export function PendingPage() {
   return (
     <Card title="Pantallas en construcción" id="pending">
       <p>
-        Las pantallas de su rol se construyen en fases posteriores del demo. Hoy están disponibles
-        la <strong>capacidad de flota</strong> (gerencia), la <strong>administración de empresas</strong>{' '}
-        (superadministrador) y la <strong>auditoría</strong> (administradores).
+        Su rol no tiene pantallas disponibles en este demo. Consulte con el administrador de su
+        empresa si debería tener acceso a alguna.
       </p>
       {mine.length > 0 ? (
         <>

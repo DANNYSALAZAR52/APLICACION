@@ -15,6 +15,8 @@ dependencies = [
     "uvicorn>=0.54",
     "argon2-cffi>=25.1",
     "pyjwt>=2.15",
+    "openpyxl>=3.1",
+    "scikit-learn>=1.9",
 ]
 
 [project.optional-dependencies]
@@ -75,7 +77,7 @@ strict = true
 
 # OR-Tools no publica stubs ni py.typed; solo lo importa el adaptador del solver.
 [[tool.mypy.overrides]]
-module = ["ortools.*"]
+module = ["ortools.*", "openpyxl.*", "sklearn.*"]
 ignore_missing_imports = true
 
 # --------------------------------------------------------- import-linter
@@ -106,6 +108,7 @@ forbidden_modules = [
     "pulp",
     "highspy",
     "ortools",
+    "openpyxl",
     "numpy",
     "pandas",
     "fleetplanner.application",
@@ -125,6 +128,7 @@ forbidden_modules = [
     "pulp",
     "highspy",
     "ortools",
+    "openpyxl",
     "fleetplanner.adapters",
     "fleetplanner.bootstrap",
 ]
@@ -137,6 +141,10 @@ modules = [
     "fleetplanner.adapters.outbound.solver",
     "fleetplanner.adapters.outbound.demo_data",
     "fleetplanner.adapters.outbound.clock",
+    "fleetplanner.adapters.outbound.traffic",
+    "fleetplanner.adapters.outbound.gps",
+    "fleetplanner.adapters.outbound.export",
+    "fleetplanner.adapters.outbound.ml",
     "fleetplanner.adapters.outbound.security",
 ]
 

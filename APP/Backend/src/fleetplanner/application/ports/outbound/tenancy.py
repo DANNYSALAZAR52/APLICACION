@@ -90,6 +90,16 @@ class RateLimiterPort(Protocol):
         ...
 
 
+class TenantWorkspaceCatalog(Protocol):
+    """Espacios de trabajo ya creados, para tareas programadas.
+
+    El tenant sale del registro central (nunca de una solicitud) y las empresas suspendidas se
+    omiten. Cada espacio sigue siendo exclusivo de su empresa.
+    """
+
+    def active_workspaces(self) -> list[tuple[Tenant, TenantWorkspace]]: ...
+
+
 class TenantWorkspaceProvider(Protocol):
     """Entrega los datos/casos de uso del tenant de la identidad autenticada."""
 

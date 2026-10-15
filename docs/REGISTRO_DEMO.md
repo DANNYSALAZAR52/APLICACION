@@ -267,3 +267,124 @@ la Empresa B devuelve cifras distintas a la A.
 - Siguiente fase propuesta: **fase 3 — ruteo** (tiempos Haversine×1,35 + perfil de velocidad, plan de
   la mañana con OR-Tools y heurística de comparación, eventos con aprobación, versiones del plan) y
   sus pantallas (torre de control con mapa, eventos, hoja de ruta del conductor).
+
+---
+
+## Sesión 3 (2026-10-14) — instalación en un PC nuevo y ruteo dinámico
+
+### 1. Puesta en marcha en este PC
+- Python 3.12.0 (antes solo se había probado con 3.13: **ahora también 3.12**), Node portátil
+  v24.21.0 por `scripts/setup-frontend.ps1` (SHA-256 verificado).
+- `pip` fallaba con `CERTIFICATE_VERIFY_FAILED` (Windows sí confía en el certificado; el pip de Python
+  no). Sin desactivar la verificación: se instaló `truststore` (wheel con hash verificado) y se usó
+  `pip install --use-feature=truststore`. `editables==0.5` se instaló aparte (dependencia de build de
+  hatchling que no está en el lockfile) y el paquete con `--no-build-isolation`.
+- Resultado inicial: 288 pytest, 79 vitest, linters limpios. La primera corrida de vitest en frío
+  falló una prueba por tiempo de arranque; las siguientes tres pasaron.
+
+### 2. Aprobación
+Plan aprobado por el usuario (incrementos: ruteo + torre de control → GPS/SSE → hoja del conductor →
+maestros → ML → cierre) y dependencias (D-020). Orden elegido: ruteo primero.
+
+### 3. Incremento 1: ruteo dinámico (implementado y probado)
+- Dominio `domain/routing/` (solo librería estándar): geografía, ventanas, modelos con validación
+  (criterio 11), evaluación de rutas, heurística, seguimiento, plan versionado, eventos/propuestas,
+  KPIs.
+- Aplicación `application/use_cases/routing/`: plan de la mañana, planificador de re-ruteo,
+  `HandleEvent`, `ApproveReroute`, `TrackFleet`, instantánea de la torre de control, indicadores y
+  fachada con RBAC, auditoría y límite de tasa.
+- Adaptadores: reloj acelerado, tiempos simulados + respaldo, OR-Tools VRP, repositorio en memoria,
+  datos sintéticos (CEDI Funza, 36 clientes en Bogotá para la Empresa A, 22 para la B).
+- HTTP: `/api/v1/routing/{tower,track,events,proposals/{id}/decision,simulation,day/reset,plans/{v},indicators}`.
+- Frontend: Torre de control (mapa Leaflet), Línea de tiempo (SVG con tabla equivalente), Eventos y
+  re-ruteo (formulario, propuestas con impacto, aprobación con confirmación, comparación de versiones)
+  e Indicadores diarios (barras con leyenda + tabla; paleta validada con el validador de la guía).
+- **Defecto real encontrado y corregido:** `ConfirmDialog` devolvía el foco al botón Cancelar en cada
+  render, así que escribir en un campo del diálogo perdía el foco (lo detectó la prueba de aprobación).
+- **Defecto encontrado y corregido:** el solver quedaba peor que la heurística por la hora de la matriz
+  (D-024).
+
+### 4. Comandos ejecutados y resultados (2026-10-14)
+- `pytest --cov`: **490 passed**, cobertura del dominio **98 %**.
+- `ruff check src tests`: limpio. `mypy`: sin errores (105 archivos). `import-linter`: 5 contratos
+  cumplidos. `bandit -r src`: 0 hallazgos activos.
+- `pip_audit`: **no se pudo ejecutar** (error SSL de este PC al consultar PyPI).
+- Frontend: `tsc --noEmit` limpio, `vitest`: **128 passed**, `vite build` correcto, `npm audit`: 0.
+- Recorrido real por la API (Argon2 + OR-Tools + Empresa A): ver `ESTADO_IMPLEMENTACION.md`.
+
+### 5. Pendiente / límites
+- **No hubo revisión visual en un navegador** (no hay herramienta de navegador en la sesión).
+- Sin E2E (Playwright), sin cobertura del frontend.
+- Criterios 1–10 siguen sin verificarse (falta la planilla). Criterios 11 y 12: aprobados por pruebas.
+- Siguiente: GPS simulado y SSE; hoja de ruta del conductor.
+
+### 6. Incrementos 2 y 3 (misma sesión): GPS, tiempo real y hoja del conductor
+- **Incremento 2:** `GpsPort` + simulador, geocerca (≥ 100 m / > 5 min), alerta de 15 min sin señal
+  (conserva el plan), botón para cortar la señal de un vehículo, tarea programada de seguimiento
+  por empresa y flujo SSE autenticado (D-028, D-029).
+- **Incremento 3:** hoja de ruta del conductor mobile-first: siguiente parada, enlaces de Google Maps
+  (≤ 9 puntos intermedios, encadenados), confirmar entrega, reportar novedad y descargar CSV (D-030).
+  Las novedades aparecen en la torre de control. El conductor sembrado queda asignado a `V-01`.
+- **Falla de seguridad encontrada por las pruebas y corregida:** el SSE devolvía 200 a los roles sin
+  permiso (autorizaba ya dentro del flujo). Ahora autoriza antes de abrirlo.
+- **Defecto corregido:** el cliente SSE podía reconectar sin pausa en un bucle cerrado (lo detectó una
+  prueba por agotamiento de memoria); ahora espera entre reconexiones.
+- **Verificado contra un servidor real (uvicorn):** el SSE llega de forma incremental (uno por
+  segundo). **No** se verificó a través del proxy de Vite del entorno de desarrollo.
+- **Comandos (2026-10-14):** `pytest --cov` **610 passed** (98 % del dominio); `ruff`, `mypy` (113
+  archivos), `import-linter` (5 contratos) y `bandit` limpios; `vitest` **170 passed**, `tsc`, `vite
+  build` y `npm audit` limpios. `pip-audit` sigue sin poder ejecutarse (SSL).
+
+### 7. Incremento 4 (misma sesión): maestros, parámetros, CSV, historial y Excel
+- **Backend:** módulo `domain/masters` (esquema, catálogo, constructores), servicio de maestros con
+  integridad referencial, carga CSV con previsualización (todo o nada), parámetros versionados con vigencia,
+  historial solo-agregar, exportador openpyxl y rutas HTTP para administrador de empresa (D-031…D-034).
+  El tablero de capacidad y el ruteo leen ahora los maestros editables.
+- **Frontend:** pantalla "Maestros y parámetros" (pestañas por área, formularios por esquema, diálogo CSV,
+  parámetros con cambio programado, historial filtrable) y botones "Exportar Excel" en capacidad y hoja
+  del conductor.
+- **Defectos encontrados y corregidos durante el desarrollo:** mensajes de `ValueError` en inglés que
+  llegaban al usuario (ahora se traducen), el diálogo de confirmación devolvía el foco a "Cancelar" en cada
+  render y se perdía lo escrito, y la lista de métodos permitidos de CORS no incluía PUT/DELETE.
+- **Comandos (2026-10-14):** backend `pytest --cov=fleetplanner` **764 passed** (96 % total de `src`);
+  `ruff check` y `ruff format --check` limpios; `mypy` sin errores (132 archivos); `lint-imports` 5 contratos
+  cumplidos; `bandit -r src` sin hallazgos activos. Frontend: `tsc --noEmit` limpio, `vitest` **207 passed**,
+  `vite build` correcto, `npm audit --audit-level=high` 0 vulnerabilidades. `pip-audit` sigue sin poder
+  ejecutarse (SSL).
+- **Límites:** sin revisión visual en navegador; sin E2E; el vínculo conductor ↔ vehículo no se edita en la
+  interfaz.
+
+### 8. Incremento 5 (misma sesión): datos sintéticos y machine learning
+- **Dependencia instalada (aprobada):** `scikit-learn 1.9.1` (+ `scipy`, `joblib`, `threadpoolctl`,
+  `narwhals`, `cloudpickle`), con `pip --use-feature=truststore`; fijadas en `requirements.lock`.
+- **Backend:** `domain/ml` (calendario de festivos de Colombia, métricas, partición temporal, tipos),
+  `application/use_cases/ml` (`MlService`, accesos, reentrenamiento programado), adaptadores scikit-learn
+  y registro con hash, generador sintético, endpoints `GET /api/v1/patterns` y `POST /api/v1/patterns/retrain`,
+  y pronóstico ML en el tablero de capacidad (D-035…D-037).
+- **Frontend:** pantalla "Patrones detectados" (pronóstico con intervalo y tabla, anomalías, riesgo de
+  retraso, segmentos, procedencia de modelos, límites) y panel "ML frente al percentil" en capacidad.
+- **Documentación nueva:** `docs/ML.md` (modelos, datos, métricas honestas, aislamiento, límites).
+- **Hallazgos de las pruebas / mediciones:** el P90 cubrió 79,6 % en la prueba (por debajo del 90 %
+  nominal) y el recall del riesgo de retraso fue 25,7 %; se declararon como límites, no se ajustaron los
+  umbrales para "pasar".
+- **Comandos (2026-10-14):** backend `pytest --cov=fleetplanner` **845 passed** (96 % total de `src`);
+  `ruff check`/`ruff format --check` limpios; `mypy` sin errores (153 archivos); `lint-imports` 5
+  contratos cumplidos; `bandit -r src`: 0 hallazgos, 6 supresiones justificadas. Frontend: `tsc --noEmit`
+  limpio, `vitest` **224 passed**, `vite build` correcto, `npm audit --audit-level=high` 0 vulnerabilidades.
+  `pip-audit` sigue sin poder ejecutarse (SSL).
+- **Límites:** sin revisión visual en navegador, sin E2E, métricas solo sobre datos sintéticos.
+
+### 9. Demo compartida (misma sesión): contraseñas por entorno e interfaz servida por la API
+- **Cambios:** `bootstrap/settings.py` (HOST, PORT, FRONTEND_DIST, DEMO_PASSWORD, DEMO_SUPERADMIN_PASSWORD),
+  `seed_demo` con contraseñas opcionales, `serve --host/--port`, interfaz compilada servida por la API con CSP
+  propia, `Dockerfile`, `.dockerignore`, `requirements-runtime.lock`, `scripts/share-demo.ps1` y
+  `docs/HOSPEDAJE_DEMO.md` (D-038).
+- **Verificado:** pruebas nuevas en `tests/security/test_shared_hosting.py` (configuración, contraseñas,
+  servicio de la interfaz, recorrido de rutas, CSP, mismo origen). Arranque real en local con
+  `FLEETPLANNER_ENV=production`: `/` y `/capacidad` devuelven la interfaz, los activos con caché larga, el
+  inicio de sesión funciona para gerencia, conductor, despachador (Empresa B) y superadmin, una contraseña
+  incorrecta da 401, `/api/v1/docs` da 404, y las contraseñas y la clave **no** aparecen en la salida del
+  servidor.
+- **No verificado:** construcción de la imagen Docker, ejecución en Railway, túnel real, SSE a través de un
+  proxy, y la interfaz en un celular.
+

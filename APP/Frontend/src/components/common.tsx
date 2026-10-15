@@ -68,6 +68,8 @@ interface ConfirmDialogProps {
   onConfirm: () => void
   onCancel: () => void
   busy?: boolean
+  /** Acciones destructivas en rojo (por defecto); las afirmativas, en el color principal. */
+  tone?: 'danger' | 'primary'
   children: ReactNode
 }
 
@@ -77,17 +79,22 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
   busy = false,
+  tone = 'danger',
   children,
 }: ConfirmDialogProps) {
   const cancelRef = useRef<HTMLButtonElement>(null)
+  // onCancel suele ser una función nueva en cada render: se guarda en una referencia para que el
+  // foco inicial se ponga una sola vez (si no, escribir en un campo del diálogo perdería el foco).
+  const onCancelRef = useRef(onCancel)
+  onCancelRef.current = onCancel
   useEffect(() => {
     cancelRef.current?.focus()
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onCancel()
+      if (event.key === 'Escape') onCancelRef.current()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onCancel])
+  }, [])
 
   return (
     <div className="dialog-backdrop">
@@ -98,7 +105,12 @@ export function ConfirmDialog({
           <button type="button" className="btn" ref={cancelRef} onClick={onCancel} disabled={busy}>
             Cancelar
           </button>
-          <button type="button" className="btn btn-danger" onClick={onConfirm} disabled={busy}>
+          <button
+            type="button"
+            className={`btn ${tone === 'primary' ? 'btn-primary' : 'btn-danger'}`}
+            onClick={onConfirm}
+            disabled={busy}
+          >
             {busy ? 'Procesando…' : confirmLabel}
           </button>
         </div>

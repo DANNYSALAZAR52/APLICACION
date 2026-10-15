@@ -1,9 +1,12 @@
+import { useState } from 'react'
+
+import { ApiError } from '../../api/errors'
 import { ErrorState, LoadingState } from '../../components/common'
-import { dashboardRows, downloadCsv, toCsv } from '../../domain-ui/csv'
+import { dashboardRows, downloadCsv, saveBlob, toCsv } from '../../domain-ui/csv'
 import { formatDateTime, formatInt, formatPercent } from '../../domain-ui/format'
 import { useApiResource } from '../../hooks/useApiResource'
 import { useAuth } from '../auth/AuthProvider'
-import { CorridorsPanel, NotesPanel } from './DetailPanels'
+import { CorridorsPanel, MlForecastPanel, NotesPanel } from './DetailPanels'
 import { FleetPanel } from './FleetPanel'
 import { KpiPanel } from './KpiPanel'
 import { MixPanel, OwnVsThirdPanel } from './MixAndOwnPanels'
@@ -13,6 +16,7 @@ export function CapacityPage() {
   const { client, user } = useAuth()
   const { state, reload } = useApiResource((signal) => client.dashboard(signal))
   const canRecalculate = user?.permissions.includes('capacity:recalculate') ?? false
+  const [exportError, setExportError] = useState<string | null>(null)
 
   if (state.status === 'loading') return <LoadingState label="Calculando la capacidad de flota…" />
   if (state.status === 'error') return <ErrorState error={state.error} onRetry={reload} />
@@ -20,6 +24,16 @@ export function CapacityPage() {
   const data = state.data
   const exportCsv = () =>
     downloadCsv(`capacidad-flota-${data.run_at.slice(0, 10)}.csv`, toCsv(dashboardRows(data)))
+
+  const exportExcel = async () => {
+    setExportError(null)
+    try {
+      const file = await client.download('/capacity/export.xlsx')
+      saveBlob(file.filename, file.blob)
+    } catch (e) {
+      setExportError(e instanceof ApiError ? e.message : 'No se pudo generar el Excel.')
+    }
+  }
 
   return (
     <div className="page">
@@ -44,11 +58,20 @@ export function CapacityPage() {
               Recalcular
             </button>
           ) : null}
+          <button type="button" className="btn" onClick={() => void exportExcel()}>
+            Exportar Excel
+          </button>
           <button type="button" className="btn" onClick={exportCsv}>
             Exportar CSV
           </button>
         </div>
       </div>
+
+      {exportError ? (
+        <div className="alert alert-error" role="alert">
+          {exportError}
+        </div>
+      ) : null}
 
       <KpiPanel data={data} />
       <FleetPanel data={data} />
@@ -58,6 +81,7 @@ export function CapacityPage() {
         <OwnVsThirdPanel data={data} />
       </div>
       <CorridorsPanel data={data} />
+      <MlForecastPanel data={data} />
       <NotesPanel data={data} />
     </div>
   )

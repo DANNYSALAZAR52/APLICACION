@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from typing import Protocol
 
 from fleetplanner.application.dto.capacity import CapacityInputs
+from fleetplanner.application.dto.ml import ForecastComparison
 from fleetplanner.domain.capacity.fleet_mix import FleetMixProblem, FleetMixSolution
 from fleetplanner.domain.capacity.results import CapacityResult
 
@@ -32,3 +33,9 @@ class FleetMixSolverPort(Protocol):
     """Solver MIP del mix de flota. El estado devuelto debe ser veraz."""
 
     def solve(self, problem: FleetMixProblem, time_limit_s: float) -> FleetMixSolution: ...
+
+
+class MlForecastSource(Protocol):
+    """Pronóstico de demanda con ML frente al percentil histórico (opcional)."""
+
+    def forecast_comparison(self) -> list[ForecastComparison]: ...

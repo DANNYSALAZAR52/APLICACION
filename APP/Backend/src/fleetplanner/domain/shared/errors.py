@@ -35,3 +35,7 @@ class RateLimitedError(DomainError):
 
 class ConflictError(DomainError):
     """La operación choca con el estado actual (p. ej. identificador repetido)."""
+
+
+class ArtifactIntegrityError(DomainError):
+    """Un artefacto guardado no coincide con el hash registrado: no se carga."""

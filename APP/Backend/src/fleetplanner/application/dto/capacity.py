@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from fleetplanner.application.dto.ml import ForecastComparison
 from fleetplanner.domain.capacity.design_demand import DesignDemand
 from fleetplanner.domain.capacity.effective_capacity import EffectiveCapacity
 from fleetplanner.domain.capacity.fleet_mix import FleetMixSolution
@@ -98,3 +99,4 @@ class CapacityDashboard:
     corridor_names: Mapping[str, str]
     warnings: list[str] = field(default_factory=list)
     ml_forecast_available: bool = False
+    ml_forecast: list[ForecastComparison] = field(default_factory=list)

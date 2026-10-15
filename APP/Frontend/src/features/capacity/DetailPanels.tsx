@@ -90,9 +90,55 @@ export function NotesPanel({ data }: { data: DashboardResponse }) {
         )}
         <p>
           <strong>Pronóstico de demanda con ML:</strong>{' '}
-          {data.ml_forecast_available ? 'disponible' : `${NOT_AVAILABLE} en esta fase`}
+          {data.ml_forecast_available ? 'disponible (ver el panel inferior)' : NOT_AVAILABLE}
         </p>
       </Card>
     </div>
+  )
+}
+
+/** ML frente al percentil histórico: pronóstico del siguiente día por corredor. */
+export function MlForecastPanel({ data }: { data: DashboardResponse }) {
+  if (!data.ml_forecast_available || data.ml_forecast.length === 0) return null
+  const designByCorridor = new Map(data.corridors.map((c) => [c.code, c.design_t]))
+  const day = data.ml_forecast[0]?.day
+  return (
+    <Card title="Pronóstico de demanda con ML frente al percentil histórico" id="ml-forecast">
+      <p className="muted small">
+        Pronóstico para el {day} con datos sintéticos de demostración. El P90 del modelo y el
+        percentil histórico responden la misma pregunta con métodos distintos; el pronóstico no
+        reemplaza la demanda de diseño del balance (que sigue usando el percentil).
+      </p>
+      <div className="table-wrap">
+        <table>
+          <caption className="visually-hidden">Pronóstico ML frente al percentil histórico</caption>
+          <thead>
+            <tr>
+              <th scope="col">Corredor</th>
+              <th scope="col" className="num">P50 ML (t)</th>
+              <th scope="col" className="num">P90 ML (t)</th>
+              <th scope="col" className="num">Línea base ingenua (t)</th>
+              <th scope="col" className="num">P90 histórico de ML (t)</th>
+              <th scope="col" className="num">Demanda de diseño del balance (t)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.ml_forecast.map((f) => (
+              <tr key={f.corridor_code}>
+                <th scope="row">
+                  {f.corridor_code}
+                  <div className="muted small">{f.corridor_name}</div>
+                </th>
+                <td className="num">{formatDecimal(f.p50_t)}</td>
+                <td className="num">{formatDecimal(f.p90_t)}</td>
+                <td className="num">{f.baseline_t === null ? NOT_AVAILABLE : formatDecimal(f.baseline_t)}</td>
+                <td className="num">{formatDecimal(f.historical_p90_t)}</td>
+                <td className="num">{formatDecimal(designByCorridor.get(f.corridor_code))}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   )
 }

@@ -40,14 +40,12 @@ describe('sesión y navegación', () => {
     expect(screen.getByRole('note', { name: /datos de demostración/i })).toBeInTheDocument()
   })
 
-  it('las pantallas futuras aparecen deshabilitadas y explicadas, no como enlaces vacíos', async () => {
+  it('gerencia y despachador ven Patrones detectados; no quedan pantallas pendientes', async () => {
     renderApp(makeFakeClient('management'))
     await screen.findByRole('heading', { name: 'Capacidad de flota' })
     const nav = screen.getByRole('navigation', { name: 'Navegación principal' })
-    const pending = within(nav).getByText(/Patrones de ML/)
-    expect(pending.closest('[aria-disabled="true"]')).not.toBeNull()
-    expect(within(nav).queryByRole('link', { name: /Patrones de ML/ })).toBeNull()
-    expect(nav).toHaveTextContent('no disponible: se construye en una fase posterior')
+    expect(within(nav).getByRole('link', { name: 'Patrones detectados' })).toBeInTheDocument()
+    expect(nav).not.toHaveTextContent('Próximamente')
   })
 
   it('el superadministrador aterriza en empresas', async () => {
@@ -55,14 +53,33 @@ describe('sesión y navegación', () => {
     expect(await screen.findByRole('heading', { name: 'Administración de empresas' })).toBeInTheDocument()
   })
 
-  it.each<Role>(['dispatcher', 'driver'])('%s no tiene pantallas aún: ve "Pantallas en construcción"', async (role) => {
-    renderApp(makeFakeClient(role))
-    expect(await screen.findByRole('heading', { name: 'Pantallas en construcción' })).toBeInTheDocument()
+  it('el conductor aterriza en su hoja de ruta y solo ve esa opción', async () => {
+    renderApp(makeFakeClient('driver'))
+    expect(await screen.findByRole('heading', { name: 'Mi hoja de ruta' })).toBeInTheDocument()
+    const nav = screen.getByRole('navigation', { name: 'Navegación principal' })
+    expect(within(nav).getByRole('link', { name: 'Mi hoja de ruta' })).toBeInTheDocument()
+    expect(within(nav).queryByRole('link', { name: 'Torre de control' })).toBeNull()
+    expect(within(nav).queryByRole('link', { name: 'Capacidad de flota' })).toBeNull()
+  })
+
+  it('el despachador aterriza en la torre de control y ve sus tres pantallas', async () => {
+    renderApp(makeFakeClient('dispatcher'))
+    expect(await screen.findByRole('heading', { name: 'Torre de control' })).toBeInTheDocument()
+    const nav = screen.getByRole('navigation', { name: 'Navegación principal' })
+    for (const name of ['Torre de control', 'Línea de tiempo', 'Eventos y re-ruteo']) {
+      expect(within(nav).getByRole('link', { name })).toBeInTheDocument()
+    }
+    expect(within(nav).queryByRole('link', { name: 'Capacidad de flota' })).toBeNull()
   })
 
   it.each<[Role, string]>([
     ['dispatcher', '/capacidad'],
+    ['dispatcher', '/mi-ruta'],
+    ['management', '/mi-ruta'],
     ['driver', '/capacidad'],
+    ['driver', '/torre-de-control'],
+    ['management', '/torre-de-control'],
+    ['tenant_admin', '/eventos'],
     ['management', '/empresas'],
     ['tenant_admin', '/empresas'],
     ['management', '/auditoria'],
@@ -73,6 +90,7 @@ describe('sesión y navegación', () => {
     expect(client.dashboard).not.toHaveBeenCalled()
     expect(client.tenants).not.toHaveBeenCalled()
     expect(client.audit).not.toHaveBeenCalled()
+    expect(client.tower).not.toHaveBeenCalled()
   })
 
   it('cerrar sesión llama al servidor y vuelve al login', async () => {
@@ -184,7 +202,7 @@ describe('tablero de capacidad', () => {
     expect(screen.getAllByText('Déficit de 1')).toHaveLength(2)
     expect(screen.getByText(/Calculado:.*hora de Bogotá/)).toBeInTheDocument()
     expect(screen.getByText(/OTIF/).closest('div')).toHaveTextContent('No disponible (requiere ruteo)')
-    expect(screen.getByText(/Pronóstico de demanda con ML:/).closest('p')).toHaveTextContent('No disponible en esta fase')
+    expect(screen.getByText(/Pronóstico de demanda con ML:/).closest('p')).toHaveTextContent('No disponible')
     const fleet = screen.getByRole('table', { name: /Flota requerida por método/ })
     expect(within(fleet).getByRole('row', { name: /Total/ })).toBeInTheDocument()
     expect(screen.getByText('La flota actual deja de alcanzar en 2027')).toBeInTheDocument()

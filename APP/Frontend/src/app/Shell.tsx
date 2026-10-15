@@ -12,20 +12,20 @@ interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
+  { to: '/mi-ruta', label: 'Mi hoja de ruta', permission: 'driver:route' },
+  { to: '/torre-de-control', label: 'Torre de control', permission: 'routing:read' },
+  { to: '/linea-de-tiempo', label: 'Línea de tiempo', permission: 'routing:read' },
+  { to: '/eventos', label: 'Eventos y re-ruteo', permission: 'routing:events' },
   { to: '/capacidad', label: 'Capacidad de flota', permission: 'capacity:read' },
+  { to: '/indicadores', label: 'Indicadores diarios', permission: 'indicators:read' },
+  { to: '/patrones', label: 'Patrones detectados', permission: 'patterns:read' },
+  { to: '/maestros', label: 'Maestros y parámetros', permission: 'master_data:manage' },
   { to: '/empresas', label: 'Administración de empresas', permission: 'tenants:manage' },
   { to: '/auditoria', label: 'Auditoría', permission: 'audit:read' },
 ]
 
 // Pantallas planificadas que todavía no existen: se muestran deshabilitadas y explicadas.
-export const PENDING_ITEMS: { label: string; permission: Permission }[] = [
-  { label: 'Torre de control', permission: 'routing:read' },
-  { label: 'Eventos y re-ruteo', permission: 'routing:events' },
-  { label: 'Hoja de ruta del conductor', permission: 'driver:route' },
-  { label: 'Patrones de ML', permission: 'patterns:read' },
-  { label: 'Indicadores diarios', permission: 'indicators:read' },
-  { label: 'Maestros y parámetros', permission: 'master_data:manage' },
-]
+export const PENDING_ITEMS: { label: string; permission: Permission }[] = []
 
 export function Shell() {
   const { user, logout } = useAuth()

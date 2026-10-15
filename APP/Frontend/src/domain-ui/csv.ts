@@ -48,6 +48,16 @@ export function dashboardRows(d: DashboardResponse): (string | number | null)[][
   return rows
 }
 
+/** Entrega al navegador un archivo ya generado (por ejemplo, un Excel del servidor). */
+export function saveBlob(filename: string, blob: Blob): void {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
 /** Descarga un CSV (con BOM para que Excel respete los acentos). */
 export function downloadCsv(filename: string, content: string): void {
   const blob = new Blob(['﻿', content], { type: 'text/csv;charset=utf-8' })

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from fleetplanner.application.dto.capacity import CapacityDashboard
-from fleetplanner.application.ports.outbound.capacity import CapacityInputsReader
+from fleetplanner.application.dto.ml import ForecastComparison
+from fleetplanner.application.ports.outbound.capacity import CapacityInputsReader, MlForecastSource
 from fleetplanner.application.ports.outbound.clock import ClockPort
 from fleetplanner.application.use_cases.capacity_common import prepare_capacity
 from fleetplanner.application.use_cases.optimize_fleet_mix import OptimizeFleetMix
@@ -17,6 +18,7 @@ from fleetplanner.domain.capacity.fleet_mix import FleetMixSolution, SolverStatu
 from fleetplanner.domain.capacity.monte_carlo import MonteCarloResult
 from fleetplanner.domain.capacity.projection import ScenarioProjection
 from fleetplanner.domain.capacity.results import ALGORITHM_VERSION
+from fleetplanner.domain.shared.errors import DomainError
 
 
 class BuildCapacityDashboard:
@@ -28,8 +30,10 @@ class BuildCapacityDashboard:
         monte_carlo: SimulateMonteCarlo,
         mix: OptimizeFleetMix,
         clock: ClockPort,
+        ml: MlForecastSource | None = None,
     ) -> None:
         self._reader = reader
+        self._ml = ml
         self._analysis = analysis
         self._projection = projection
         self._monte_carlo = monte_carlo
@@ -58,10 +62,20 @@ class BuildCapacityDashboard:
                 f"El optimizador del mix terminó con estado '{mix.status.value}', no 'óptimo'. "
                 f"{mix.message}".strip()
             )
-        warnings.append(
-            "Pronóstico de demanda con ML no disponible en esta fase; "
-            "se usa el percentil histórico."
-        )
+        ml_forecast: list[ForecastComparison] = []
+        if self._ml is not None:
+            try:
+                ml_forecast = self._ml.forecast_comparison()
+            except DomainError as error:
+                warnings.append(
+                    f"Pronóstico de demanda con ML no disponible ({error}); "
+                    "se usa el percentil histórico."
+                )
+        else:
+            warnings.append(
+                "Pronóstico de demanda con ML no disponible en esta configuración; "
+                "se usa el percentil histórico."
+            )
         return CapacityDashboard(
             run_at=run_at,
             algorithm_version=ALGORITHM_VERSION,
@@ -76,6 +90,8 @@ class BuildCapacityDashboard:
             parameters=inputs.parameters,
             corridor_names={c.code: c.name for c in inputs.corridors},
             warnings=warnings,
+            ml_forecast_available=bool(ml_forecast),
+            ml_forecast=ml_forecast,
         )
 
 

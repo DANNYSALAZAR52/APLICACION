@@ -105,3 +105,5 @@ class Principal:
     tenant_id: TenantId | None
     tenant_slug: str | None
     tenant_name: str | None = None
+    # Vehículo asignado al conductor (viene del usuario guardado, nunca de la solicitud).
+    vehicle_id: str | None = None

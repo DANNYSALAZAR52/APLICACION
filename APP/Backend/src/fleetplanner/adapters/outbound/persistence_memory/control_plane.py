@@ -202,6 +202,16 @@ class InMemoryTenantWorkspaceProvider:
         self._cache: dict[str, TenantWorkspace] = {}
         self._lock = threading.Lock()
 
+    def active_workspaces(self) -> list[tuple[Tenant, TenantWorkspace]]:
+        with self._lock:
+            cached = list(self._cache.items())
+        result: list[tuple[Tenant, TenantWorkspace]] = []
+        for tenant_id, workspace in cached:
+            tenant = self._registry.get_by_id(TenantId(tenant_id))
+            if tenant is not None and tenant.is_active:
+                result.append((tenant, workspace))
+        return result
+
     def workspace_for(self, principal: Principal) -> TenantWorkspace:
         if principal.tenant_id is None:
             raise PermissionDeniedError("La identidad no pertenece a ninguna empresa.")

@@ -42,6 +42,7 @@ def _principal_for(user: User, tenant: Tenant | None) -> Principal:
         tenant_id=user.tenant_id,
         tenant_slug=tenant.slug if tenant else None,
         tenant_name=tenant.name if tenant else None,
+        vehicle_id=user.attributes.get("vehicle_id"),
     )
 
 
